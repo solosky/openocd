@@ -182,6 +182,9 @@ endif
 if OPENJTAG
 DRIVERFILES += %D%/openjtag.c
 endif
+
+DRIVERFILES += %D%/cmsis_dap_tcp.c
+
 if CMSIS_DAP_HID
 DRIVERFILES += %D%/cmsis_dap_usb_hid.c
 DRIVERFILES += %D%/cmsis_dap.c

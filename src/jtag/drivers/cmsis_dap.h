@@ -4,6 +4,8 @@
 #define OPENOCD_JTAG_DRIVERS_CMSIS_DAP_H
 
 #include <stdint.h>
+#include <stdbool.h>
+#include "helper/command.h"
 
 struct cmsis_dap_backend;
 struct cmsis_dap_backend_data;
@@ -68,7 +70,9 @@ struct cmsis_dap_backend {
 
 extern const struct cmsis_dap_backend cmsis_dap_hid_backend;
 extern const struct cmsis_dap_backend cmsis_dap_usb_backend;
+extern const struct cmsis_dap_backend cmsis_dap_tcp_backend;
 extern const struct command_registration cmsis_dap_usb_subcommand_handlers[];
+extern const struct command_registration cmsis_dap_tcp_subcommand_handlers[];
 
 #define REPORT_ID_SIZE   1
 
