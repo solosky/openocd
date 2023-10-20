@@ -40,7 +40,7 @@ struct cmsis_dap_backend_data {
 #define EL_DAP_VERSION 0x00000001
 #define EL_COMMAND_HANDSHAKE 0x00000000
 
-#define EL_TIMEOUT 800
+#define EL_TIMEOUT 500000
 
 typedef struct {
   uint32_t el_link_identifier;
@@ -136,6 +136,7 @@ static int cmsis_dap_tcp_read(struct cmsis_dap *dap, int timeout_ms) {
   transferred = read(dap->bdata->sk_fd, dap->packet_buffer, dap->packet_size);
   if (transferred < 0) {
     if (errno == EAGAIN) {
+      LOG_ERROR("timeout reading data: ");
       return ERROR_TIMEOUT_REACHED;
     } else {
       LOG_ERROR("error reading data: ");
@@ -156,6 +157,7 @@ static int cmsis_dap_tcp_write(struct cmsis_dap *dap, int txlen,
   transferred = send(dap->bdata->sk_fd, dap->packet_buffer, txlen, 0);
   if (transferred < 0) {
     if (errno == EAGAIN) {
+      LOG_ERROR("timeout sending data: ");
       return ERROR_TIMEOUT_REACHED;
     } else {
       LOG_ERROR("error sending data: ");
