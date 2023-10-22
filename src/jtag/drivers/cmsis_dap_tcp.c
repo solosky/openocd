@@ -27,14 +27,16 @@
 #include "cmsis_dap.h"
 #if defined(_WIN32) || defined(WIN32)
 #include <ws2tcpip.h>
+#include <winsock2.h>
 #else
 #include <arpa/inet.h>
+#include <sys/socket.h>
 #endif
 #include <helper/log.h>
 #include <helper/replacements.h>
 #include <helper/system.h>
 #include <string.h>
-#include <sys/socket.h>
+
 
 struct cmsis_dap_backend_data {
   int sk_fd;
