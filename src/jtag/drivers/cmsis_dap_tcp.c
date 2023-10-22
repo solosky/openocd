@@ -25,7 +25,11 @@
 #endif
 
 #include "cmsis_dap.h"
+#if defined(_WIN32) || defined(WIN32)
+#include <ws2tcpip.h>
+#else
 #include <arpa/inet.h>
+#endif
 #include <helper/log.h>
 #include <helper/replacements.h>
 #include <helper/system.h>
