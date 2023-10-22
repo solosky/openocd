@@ -40,7 +40,6 @@ struct cmsis_dap_backend_data {
 #define EL_DAP_VERSION 0x00000001
 #define EL_COMMAND_HANDSHAKE 0x00000000
 
-#define EL_TIMEOUT 500000
 
 typedef struct {
   uint32_t el_link_identifier;
@@ -48,7 +47,8 @@ typedef struct {
   uint32_t el_proxy_version;
 } __attribute__((packed)) el_request_handshake;
 
-struct sockaddr_in device_addr;
+static struct sockaddr_in device_addr;
+static int default_timeout_ms = 1000;
 
 static void cmsis_dap_tcp_close(struct cmsis_dap *dap);
 static int cmsis_dap_tcp_alloc(struct cmsis_dap *dap, unsigned int pkt_sz);
@@ -66,8 +66,8 @@ static int cmsis_dap_tcp_open(struct cmsis_dap *dap, uint16_t vids[],
   }
 
   struct timeval tv;
-  tv.tv_sec = 0;
-  tv.tv_usec = EL_TIMEOUT;
+  tv.tv_sec = default_timeout_ms / 1000;
+  tv.tv_usec = (default_timeout_ms % 1000) * 1000;
   setsockopt(sk_fd, SOL_SOCKET, SO_RCVTIMEO, (const char *)&tv, sizeof tv);
 
   err = connect(sk_fd, (struct sockaddr *)&device_addr, sizeof(device_addr));
@@ -186,13 +186,13 @@ static int cmsis_dap_tcp_alloc(struct cmsis_dap *dap, unsigned int pkt_sz) {
   return ERROR_OK;
 }
 
-COMMAND_HANDLER(cmsis_dap_tcp_interface_command) {
+COMMAND_HANDLER(cmsis_dap_tcp_interface_host_command) {
   if (CMD_ARGC == 1) {
     device_addr.sin_family = AF_INET;
     device_addr.sin_port = htons(3240);
     char *pos = strchr(CMD_ARGV[0], ':');
     if (pos) {
-      //TODO ...
+      // TODO ...
     } else {
       if (inet_pton(AF_INET, CMD_ARGV[0], &device_addr.sin_addr) <= 0) {
         LOG_ERROR("device addr parse failed");
@@ -206,13 +206,31 @@ COMMAND_HANDLER(cmsis_dap_tcp_interface_command) {
   return ERROR_OK;
 }
 
+COMMAND_HANDLER(cmsis_dap_tcp_interface_timeout_command) {
+  if (CMD_ARGC == 1) {
+    COMMAND_PARSE_NUMBER(int, CMD_ARGV[0], default_timeout_ms);
+  } else
+    LOG_ERROR("expected exactly one argument to cmsis_dap_tcp_interface "
+              "<interface_number>");
+
+  return ERROR_OK;
+}
+
 const struct command_registration cmsis_dap_tcp_subcommand_handlers[] = {
     {
         .name = "host",
-        .handler = &cmsis_dap_tcp_interface_command,
+        .handler = &cmsis_dap_tcp_interface_host_command,
         .mode = COMMAND_CONFIG,
-        .help = "set the USB host/ip address (for USB TCP backend only)",
+        .help = "set the host/ip address (for TCP backend only)",
         .usage = "<ip:port>",
+    },
+    {
+        .name = "timeout",
+        .handler = &cmsis_dap_tcp_interface_timeout_command,
+        .mode = COMMAND_CONFIG,
+        .help = "set the read/write timeout in ms (for TCP backend only, default is "
+                "1000 ms)",
+        .usage = "<timeout>",
     },
     COMMAND_REGISTRATION_DONE};
 
